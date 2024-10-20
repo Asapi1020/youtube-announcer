@@ -9,14 +9,13 @@ import {
 } from "../../../src/utils";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-	const { channelID, lastUpdate } = req.query;
+	const { channelIDs, lastUpdate } = req.body;
 
-	if (!channelID) {
+	if (!channelIDs) {
 		return res.status(400).json({ error: "Invalid channelId" });
 	}
 
 	try {
-		const channelIDs = typeof channelID === "string" ? [channelID] : channelID;
 		const feeds = await getFeeds(channelIDs);
 		const videoIDs = getNewVideoIDs(
 			feeds,
