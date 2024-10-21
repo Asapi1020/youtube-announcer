@@ -12,9 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const { channelIDs, lastUpdate } = req.body;
 
 	if (!channelIDs) {
-		return res
-			.status(400)
-			.json({ error: "Invalid channelIds", requestBody: req.body });
+		return res.status(400).json({ error: "Invalid channelIds", request: req });
 	}
 
 	try {
