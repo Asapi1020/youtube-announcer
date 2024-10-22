@@ -15,10 +15,7 @@ export const getFeeds = async (channelIDs: string[]): Promise<Feed[]> => {
 	return feeds;
 };
 
-export const getNewVideoIDs = (
-	feeds: Feed[],
-	lastUpdate: string | undefined,
-): string[] => {
+export const getNewVideoIDs = (feeds: Feed[], lastUpdate: string): string[] => {
 	const newFeeds = feeds.map((feed) => {
 		return lastUpdate
 			? feed.items.filter((item) => {
@@ -50,10 +47,11 @@ export const sortVideos = (
 
 export const getVideoDetails = async (
 	videoIDs: string[],
+	youtubeAPIKey: string,
 ): Promise<youtube_v3.Schema$Video[]> => {
 	const youtube = google.youtube({
 		version: "v3",
-		auth: process.env.YOUTUBE_API_KEY,
+		auth: youtubeAPIKey,
 	});
 
 	const response = await youtube.videos.list({
@@ -70,10 +68,11 @@ export const getVideoDetails = async (
 
 export const getChannelDetails = async (
 	channelIDs: string[],
+	youtubeAPIKey: string,
 ): Promise<youtube_v3.Schema$Channel[]> => {
 	const youtube = google.youtube({
 		version: "v3",
-		auth: process.env.YOUTUBE_API_KEY,
+		auth: youtubeAPIKey,
 	});
 
 	const response = await youtube.channels.list({
@@ -91,9 +90,9 @@ export const getChannelDetails = async (
 export const postVideos = async (
 	video: youtube_v3.Schema$Video,
 	channel: youtube_v3.Schema$Channel,
+	webhookURL: string,
 ): Promise<void> => {
-	const url = process.env.WEBHOOK_URL;
-	if (!url) {
+	if (!webhookURL) {
 		throw new Error("Internal Server Error: Undefined Webhook URL");
 	}
 
@@ -113,7 +112,7 @@ export const postVideos = async (
 					: undefined,
 				description: video.snippet?.description,
 				image: {
-					url: video.snippet?.thumbnails?.default?.url,
+					url: video.snippet?.thumbnails?.high.url,
 				},
 				color: 0xff0000,
 				timestamp: video.snippet?.publishedAt,
@@ -121,7 +120,7 @@ export const postVideos = async (
 		],
 	};
 
-	const response = await fetch(url, {
+	const response = await fetch(webhookURL, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",

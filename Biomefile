@@ -1,0 +1,18 @@
+{
+  "name": "x-bot",
+  "root": true,
+  "files": {
+    "*": {
+      "charset": "utf-8",
+      "endOfLine": "lf",
+      "indentStyle": "tab",
+      "insertFinalNewline": true,
+      "maxLineLength": 120,
+      "trimTrailingWhitespace": true
+    },
+    "*.{json,yml}": {
+      "indentStyle": "space",
+      "indentSize": 2
+    }
+  }
+}
