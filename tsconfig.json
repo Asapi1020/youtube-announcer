@@ -1,0 +1,9 @@
+{
+	"compilerOptions": {
+		"moduleResolution": "nodenext",
+		"module": "nodenext",
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"target": "ES2015"
+	}
+}
