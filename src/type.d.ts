@@ -9,6 +9,7 @@ export type Feed = {
 }>;
 
 export interface DiscordWebhookPayload {
+	content?: string;
 	embeds: {
 		author: {
 			name: string | null | undefined;

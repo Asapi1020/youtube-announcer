@@ -97,6 +97,7 @@ export const postVideos = async (
 	}
 
 	const payload: DiscordWebhookPayload = {
+		content: youtubeLiveNotification(video.liveStreamingDetails),
 		embeds: [
 			{
 				author: {
@@ -131,4 +132,27 @@ export const postVideos = async (
 	if (!response.ok) {
 		throw new Error("Failed to post video");
 	}
+};
+
+const youtubeLiveNotification = (
+	liveStreamingDetails: youtube_v3.Schema$VideoLiveStreamingDetails,
+): string | undefined => {
+	if (!liveStreamingDetails) {
+		return undefined;
+	}
+
+	if (!liveStreamingDetails.actualStartTime) {
+		return `配信が <t:${getUnixTimeStamp(liveStreamingDetails.scheduledStartTime)}:F> に公開予定です！`;
+	}
+
+	if (!liveStreamingDetails.actualEndTime) {
+		return "現在配信中です！";
+	}
+
+	return "配信のアーカイブが公開されています！";
+};
+
+const getUnixTimeStamp = (isoTime: string): number => {
+	const date = new Date(isoTime);
+	return Math.floor(date.getTime() / 1000);
 };
