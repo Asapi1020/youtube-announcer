@@ -101,17 +101,17 @@ export const postVideos = async (
 		embeds: [
 			{
 				author: {
-					name: video.snippet?.channelTitle,
+					name: validateLength(video.snippet?.channelTitle, 256),
 					url: channel.id
 						? `https://www.youtube.com/channel/${channel.id}`
 						: undefined,
 					icon_url: channel.snippet?.thumbnails?.default?.url,
 				},
-				title: video.snippet?.title,
+				title: validateLength(video.snippet?.title, 256),
 				url: video.id
 					? `https://www.youtube.com/watch?v=${video.id}`
 					: undefined,
-				description: video.snippet?.description,
+				description: validateLength(video.snippet?.description, 2048),
 				image: {
 					url: video.snippet?.thumbnails?.high.url,
 				},
@@ -156,4 +156,8 @@ const youtubeLiveNotification = (
 const getUnixTimeStamp = (isoTime: string): number => {
 	const date = new Date(isoTime);
 	return Math.floor(date.getTime() / 1000);
+};
+
+const validateLength = (text: string, maxLength: number): string => {
+	return text.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;
 };
