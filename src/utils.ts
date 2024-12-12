@@ -130,6 +130,7 @@ export const postVideos = async (
 	});
 
 	if (!response.ok) {
+		console.log(payload);
 		throw new Error("Failed to post video");
 	}
 };
