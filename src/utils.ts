@@ -161,3 +161,34 @@ const getUnixTimeStamp = (isoTime: string): number => {
 const validateLength = (text: string, maxLength: number): string => {
 	return text.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;
 };
+
+export const notifyError = async (error: unknown) => {
+	const notificationURL = process.env.NOTIFICATION_URL;
+
+	if (!notificationURL) {
+		console.error("Not found notification webhook URL");
+		return;
+	}
+
+	const payload: DiscordWebhookPayload = {
+		embeds: [
+			{
+				title: "Youtube Announcer Error",
+				description: JSON.stringify(error),
+				color: 0xff0000,
+			},
+		],
+	};
+
+	const response = await fetch(notificationURL, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(payload),
+	});
+
+	if (!response.ok) {
+		console.error("Failed to post error notification");
+	}
+};

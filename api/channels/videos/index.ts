@@ -5,6 +5,7 @@ import {
 	getFeeds,
 	getNewVideoIDs,
 	getVideoDetails,
+	notifyError,
 	postVideos,
 	sortVideos,
 } from "../../../src/utils";
@@ -51,6 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 		return res.status(200).json({ postedVideos: sortedVideos.length });
 	} catch (error) {
 		console.error(error);
+		await notifyError(error);
 		return res.status(500).json(error);
 	}
 }
