@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { MongoDB, setupMongoClient } from "../../../src/mongoDB";
+import { type Config, MongoDB, setupMongoClient } from "../../../src/mongoDB";
 import {
 	getChannelDetails,
 	getFeeds,
@@ -15,10 +15,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 		return res.status(405).json({ message: "Method Not Allowed" });
 	}
 
+	let mongoDB: MongoDB | undefined = undefined;
+	let config: Config | undefined = undefined;
+
 	try {
 		const mongoClient = await setupMongoClient();
-		const mongoDB = new MongoDB(mongoClient);
-		const config = await mongoDB.getConfig("admin");
+		mongoDB = new MongoDB(mongoClient);
+		config = await mongoDB.getConfig("admin");
 
 		const feeds = await getFeeds(config.channelIDs);
 		const videoIDs = getNewVideoIDs(feeds, config.lastUpdate);
@@ -39,20 +42,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			);
 			if (authorChannel) {
 				await postVideos(video, authorChannel, config.webhookURL);
+				config.lastUpdate = video.snippet.publishedAt;
 			} else {
 				console.error("Failed to find author channel");
 			}
 		}
-
-		const lastUpdate =
-			sortedVideos[sortedVideos.length - 1].snippet.publishedAt;
-		config.lastUpdate = lastUpdate;
 		await mongoDB.putConfig(config);
 
 		return res.status(200).json({ postedVideos: sortedVideos.length });
 	} catch (error) {
 		console.error(error);
 		await notifyError(error);
+		if (!mongoDB && !config) {
+			await mongoDB.putConfig(config);
+		}
 		return res.status(500).json(error);
 	}
 }
