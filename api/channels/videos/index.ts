@@ -1,61 +1,36 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { type Config, MongoDB, setupMongoClient } from "../../../src/mongoDB";
-import {
-	getChannelDetails,
-	getFeeds,
-	getNewVideoIDs,
-	getVideoDetails,
-	notifyError,
-	postVideos,
-	sortVideos,
-} from "../../../src/utils";
+import { MongoClient } from "mongodb";
+import { MongoDB, YouTubeRepository } from "../../../src/infra";
+import { YouTubeUsecase, notifyError } from "../../../src/usecase";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 	if (req.method !== "GET") {
 		return res.status(405).json({ message: "Method Not Allowed" });
 	}
 
-	let mongoDB: MongoDB | undefined = undefined;
-	let config: Config | undefined = undefined;
-
 	try {
-		const mongoClient = await setupMongoClient();
-		mongoDB = new MongoDB(mongoClient);
-		config = await mongoDB.getConfig("admin");
-
-		const feeds = await getFeeds(config.channelIDs);
-		const videoIDs = getNewVideoIDs(feeds, config.lastUpdate);
-		if (videoIDs.length === 0) {
-			return res.status(200).json({ postedVideos: 0 });
+		const dbName = process.env.DB_NAME;
+		if (!dbName) {
+			res.status(500).json({ message: "There is no DB name" });
+			return;
+		}
+		const mongoUri = process.env.MONGO_DB_URI;
+		if (!mongoUri) {
+			res.status(500).json({ message: "There is no Mongo URI" });
+			return;
 		}
 
-		const videos = await getVideoDetails(videoIDs, config.youtubeAPIKey);
-		const sortedVideos = sortVideos(videos);
-		const channels = await getChannelDetails(
-			config.channelIDs,
-			config.youtubeAPIKey,
-		);
+		const mongoClient = await new MongoClient(mongoUri).connect();
+		const mongoDB = new MongoDB(mongoClient, dbName);
+		const youtubeRepository = new YouTubeRepository();
+		const usecase = new YouTubeUsecase(youtubeRepository, mongoDB);
 
-		for (const video of sortedVideos) {
-			const authorChannel = channels.find(
-				(channel) => channel.id === video.snippet?.channelId,
-			);
-			if (authorChannel) {
-				await postVideos(video, authorChannel, config.webhookURL);
-				config.lastUpdate = video.snippet.publishedAt;
-			} else {
-				console.error("Failed to find author channel");
-			}
-		}
-		await mongoDB.putConfig(config);
+		const postedVideos = await usecase.checkYouTube();
 
-		return res.status(200).json({ postedVideos: sortedVideos.length });
+		return res.status(200).json({ postedVideos });
 	} catch (error) {
 		console.error(error);
-		await notifyError(error);
-		if (!mongoDB && !config) {
-			await mongoDB.putConfig(config);
-		}
+		await notifyError(error).catch((error) => console.error(error));
 		return res.status(500).json(error);
 	}
 }

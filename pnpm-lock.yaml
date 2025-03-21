@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@asp1020/discord-webhook-client':
+        specifier: ^1.0.0
+        version: 1.0.0
+      '@asp1020/type-utils':
+        specifier: ^1.0.4
+        version: 1.0.4
       googleapis:
         specifier: ^144.0.0
         version: 144.0.0
@@ -32,6 +38,12 @@ importers:
         version: 5.6.3
 
 packages:
+
+  '@asp1020/discord-webhook-client@1.0.0':
+    resolution: {integrity: sha512-Qneygt8SeanEHvUBePxtMT2oWR6tHTz2RQxT0tbch26bntGlSq/cJLwVAHiKP0GJY5Ox8PMA+M0YEXw3xxIY9g==}
+
+  '@asp1020/type-utils@1.0.4':
+    resolution: {integrity: sha512-bYAX5B5VGcc/4Pm7Gi4OlwSx9XUJEDEWayhkJbtlx3fro4l6guXl1m0ZMgEUtBkm41zP16mHV+ri1pUNv2EYIw==}
 
   '@biomejs/biome@1.9.4':
     resolution: {integrity: sha512-1rkd7G70+o9KkTn5KLmDYXihGoTaIGO9PIIN2ZB7UJxFrWw04CZHPYiMRjYsaDvVV7hP1dYNRLxSANLaBFGpog==}
@@ -270,6 +282,7 @@ packages:
   bson@6.9.0:
     resolution: {integrity: sha512-X9hJeyeM0//Fus+0pc5dSUMhhrrmWwQUtdavaQeF3Ta6m69matZkGWV/MrBcnwUeLC8W9kwwc2hfkZgUuCX3Ig==}
     engines: {node: '>=16.20.1'}
+    deprecated: a critical bug affecting only useBigInt64=true deserialization usage is fixed in bson@6.10.3
 
   buffer-equal-constant-time@1.0.1:
     resolution: {integrity: sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==}
@@ -775,6 +788,9 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
+  ramda@0.30.1:
+    resolution: {integrity: sha512-tEF5I22zJnuclswcZMc8bDIrwRHRzf+NqVEmqg50ShAZMP7MWeR/RGDthfM/p+BlqvF2fXAzpn8i+SJcYD3alw==}
+
   readable-stream@3.6.2:
     resolution: {integrity: sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==}
     engines: {node: '>= 6'}
@@ -957,6 +973,12 @@ packages:
     engines: {node: '>=6'}
 
 snapshots:
+
+  '@asp1020/discord-webhook-client@1.0.0': {}
+
+  '@asp1020/type-utils@1.0.4':
+    dependencies:
+      ramda: 0.30.1
 
   '@biomejs/biome@1.9.4':
     optionalDependencies:
@@ -1659,6 +1681,8 @@ snapshots:
       side-channel: 1.0.6
 
   queue-microtask@1.2.3: {}
+
+  ramda@0.30.1: {}
 
   readable-stream@3.6.2:
     dependencies:
