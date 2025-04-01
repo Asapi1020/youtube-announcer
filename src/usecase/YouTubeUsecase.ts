@@ -44,7 +44,9 @@ export class YouTubeUsecase {
 					console.error(error);
 					await this.mongoDB.putConfig(config);
 					throw new Error(
-						error instanceof Error ? error.message : "Failed to post video",
+						error instanceof Error
+							? `${error.message} - Failed to post video`
+							: "Failed to post video",
 					);
 				},
 			);
