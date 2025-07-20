@@ -112,7 +112,9 @@ export class YouTubeUsecase {
 						: undefined,
 					description: video.snippet?.description,
 					image: {
-						url: video.snippet?.thumbnails?.maxres.url,
+						url:
+							video.snippet?.thumbnails?.maxres?.url ??
+							video.snippet?.thumbnails?.high?.url,
 					},
 					color: 0xff0000,
 					timestamp: video.snippet?.publishedAt,
