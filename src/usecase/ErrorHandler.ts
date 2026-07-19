@@ -9,12 +9,7 @@ export const notifyError = async (error: unknown) => {
 		return;
 	}
 
-	const errorMessage =
-		error instanceof Error
-			? error.message
-			: isObject(error)
-				? JSON.stringify(error)
-				: String(error);
+	const errorMessage = error instanceof Error ? error.message : isObject(error) ? JSON.stringify(error) : String(error);
 
 	const payload: Payload = {
 		embeds: [

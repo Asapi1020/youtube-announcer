@@ -18,9 +18,6 @@ export class MongoDB {
 	}
 
 	public async putConfig(config: Database.Config) {
-		await this.collection.config.updateOne(
-			{ userID: config.userID },
-			{ $set: config },
-		);
+		await this.collection.config.updateOne({ userID: config.userID }, { $set: config });
 	}
 }

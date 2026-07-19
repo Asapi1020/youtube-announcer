@@ -16,10 +16,7 @@ export class YouTubeRepository {
 		return feeds;
 	}
 
-	public async getVideoDetails(
-		videoIDs: string[],
-		youtubeAPIKey: string,
-	): Promise<youtube_v3.Schema$Video[]> {
+	public async getVideoDetails(videoIDs: string[], youtubeAPIKey: string): Promise<youtube_v3.Schema$Video[]> {
 		const youtube = google.youtube({
 			version: "v3",
 			auth: youtubeAPIKey,
@@ -37,10 +34,7 @@ export class YouTubeRepository {
 		return response.data.items;
 	}
 
-	public async getChannelDetails(
-		channelIDs: string[],
-		youtubeAPIKey: string,
-	): Promise<youtube_v3.Schema$Channel[]> {
+	public async getChannelDetails(channelIDs: string[], youtubeAPIKey: string): Promise<youtube_v3.Schema$Channel[]> {
 		const youtube = google.youtube({
 			version: "v3",
 			auth: youtubeAPIKey,
