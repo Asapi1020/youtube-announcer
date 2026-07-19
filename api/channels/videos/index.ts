@@ -29,8 +29,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 		return res.status(200).json({ postedVideos });
 	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+
 		console.error(error);
-		await notifyError(error).catch((error) => console.error(error));
-		return res.status(500).json(error);
+		await notifyError(error).catch(console.error);
+		return res.status(500).json({ message: errorMessage });
 	}
 }

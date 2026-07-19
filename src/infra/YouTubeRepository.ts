@@ -28,7 +28,7 @@ export class YouTubeRepository {
 		});
 
 		if (!response.data.items || response.data.items.length === 0) {
-			throw new Error("Not Found");
+			throw new Error(`Not Found for videoIDs: ${videoIDs.join(", ")}`);
 		}
 
 		return response.data.items;
@@ -46,7 +46,7 @@ export class YouTubeRepository {
 		});
 
 		if (!response.data.items || response.data.items.length === 0) {
-			throw new Error("Not Found");
+			throw new Error(`Not Found for channelIDs: ${channelIDs.join(", ")}`);
 		}
 
 		return response.data.items;

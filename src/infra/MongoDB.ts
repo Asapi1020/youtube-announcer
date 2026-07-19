@@ -14,6 +14,11 @@ export class MongoDB {
 
 	public async getConfig(userID: string): Promise<Database.Config> {
 		const config = await this.collection.config.findOne({ userID });
+
+		if (!config) {
+			throw new Error(`Config not found for userID: ${userID}`);
+		}
+
 		return config;
 	}
 

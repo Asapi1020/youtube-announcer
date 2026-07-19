@@ -13,16 +13,19 @@ export class YouTubeUsecase {
 	}
 
 	public async checkYouTube(): Promise<number> {
-		const config = await this.mongoDB.getConfig("admin");
-		const feeds = await this.youtubeRepository.getFeeds(config.channelIDs);
+		const config = await this.mongoDB.getConfig("admin").catch(onError("#getConfig"));
+
+		const feeds = await this.youtubeRepository.getFeeds(config.channelIDs).catch(onError("#getFeeds"));
+
 		const videoIDs = this.getNewVideoIDs(feeds, config.lastUpdate);
 		if (videoIDs.length === 0) {
 			return 0;
 		}
 
-		const videos = await this.youtubeRepository.getVideoDetails(videoIDs, config.youtubeAPIKey);
+		const videos = await this.youtubeRepository.getVideoDetails(videoIDs, config.youtubeAPIKey).catch(onError("#getVideoDetails"));
 		const sortedVideos = this.sortVideos(videos);
-		const channels = await this.youtubeRepository.getChannelDetails(config.channelIDs, config.youtubeAPIKey);
+
+		const channels = await this.youtubeRepository.getChannelDetails(config.channelIDs, config.youtubeAPIKey).catch(onError("#getChannelDetails"));
 
 		for (const video of sortedVideos) {
 			const authorChannel = channels.find((channel) => channel.id === video.snippet?.channelId);
@@ -33,12 +36,21 @@ export class YouTubeUsecase {
 
 			await this.postVideos(video, authorChannel, config.webhookURL).catch(async (error: unknown) => {
 				console.error(error);
-				await this.mongoDB.putConfig(config);
+				await this.mongoDB.putConfig(config).catch(onError("#putConfig"));
 				throw new Error(error instanceof Error ? `${error.message} - Failed to post video` : "Failed to post video");
 			});
-			config.lastUpdate = video.snippet.publishedAt;
+
+			const lastUpdate = video.snippet?.publishedAt;
+			if (!lastUpdate) {
+				console.error("Failed to get lastUpdate");
+				continue;
+			}
+
+			config.lastUpdate = lastUpdate;
 		}
-		await this.mongoDB.putConfig(config);
+
+		await this.mongoDB.putConfig(config).catch(onError("#putConfig"));
+
 		return sortedVideos.length;
 	}
 
@@ -64,8 +76,8 @@ export class YouTubeUsecase {
 
 	private sortVideos(videos: youtube_v3.Schema$Video[]): youtube_v3.Schema$Video[] {
 		return videos.sort((a, b) => {
-			const dateA = new Date(a.snippet.publishedAt).getTime();
-			const dateB = new Date(b.snippet.publishedAt).getTime();
+			const dateA = new Date(a.snippet?.publishedAt ?? 0).getTime();
+			const dateB = new Date(b.snippet?.publishedAt ?? 0).getTime();
 			return dateA - dateB;
 		});
 	}
@@ -79,23 +91,23 @@ export class YouTubeUsecase {
 			throw new Error("Internal Server Error: Undefined Webhook URL");
 		}
 
+		const imageURL = video.snippet?.thumbnails?.maxres?.url ?? video.snippet?.thumbnails?.high?.url;
+
 		const payload: Payload = {
 			content: this.youtubeLiveNotification(video.liveStreamingDetails),
 			embeds: [
 				{
 					author: {
-						name: video.snippet?.channelTitle,
+						name: video.snippet?.channelTitle ?? "Unknown Channel",
 						url: channel.id ? `https://www.youtube.com/channel/${channel.id}` : undefined,
-						icon_url: channel.snippet?.thumbnails?.default?.url,
+						icon_url: channel.snippet?.thumbnails?.default?.url ?? undefined,
 					},
-					title: video.snippet?.title,
+					title: video.snippet?.title ?? undefined,
 					url: video.id ? `https://www.youtube.com/watch?v=${video.id}` : undefined,
-					description: video.snippet?.description,
-					image: {
-						url: video.snippet?.thumbnails?.maxres?.url ?? video.snippet?.thumbnails?.high?.url,
-					},
+					description: video.snippet?.description ?? undefined,
+					image: imageURL ? { url: imageURL } : undefined,
 					color: 0xff0000,
-					timestamp: video.snippet?.publishedAt,
+					timestamp: video.snippet?.publishedAt ?? undefined,
 				},
 			],
 		};
@@ -109,14 +121,16 @@ export class YouTubeUsecase {
 	}
 
 	private youtubeLiveNotification(
-		liveStreamingDetails: youtube_v3.Schema$VideoLiveStreamingDetails,
+		liveStreamingDetails: youtube_v3.Schema$VideoLiveStreamingDetails | undefined,
 	): string | undefined {
 		if (!liveStreamingDetails) {
 			return undefined;
 		}
 
 		if (!liveStreamingDetails.actualStartTime) {
-			return `配信が <t:${this.getUnixTimeStamp(liveStreamingDetails.scheduledStartTime)}:F> に公開予定です！`;
+			return liveStreamingDetails.scheduledStartTime
+			? `配信が <t:${this.getUnixTimeStamp(liveStreamingDetails.scheduledStartTime)}:F> に公開予定です！`
+			: "配信が公開予定です！";
 		}
 
 		if (!liveStreamingDetails.actualEndTime) {
@@ -129,5 +143,14 @@ export class YouTubeUsecase {
 	private getUnixTimeStamp = (isoTime: string): number => {
 		const date = new Date(isoTime);
 		return Math.floor(date.getTime() / 1000);
+	};
+}
+
+
+function onError(error: unknown): (id: string) => never {
+	return (id: string): never => {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+
+		throw new Error(`${id} - ${errorMessage}`);
 	};
 }
